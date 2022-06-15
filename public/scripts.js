@@ -2,6 +2,32 @@ const ul = document.querySelector("ul")
 const input = document.querySelector("input")
 const form = document.querySelector('form')
 
+async function load() {
+    const res = await fetch("http://localhost:3000").then((data) => data.json()).then((data) => data);
+
+    res.urls.map((url) => {
+        return addElement(url);
+    });
+}
+
+load();
+
+async function fetchApiUrl(data, callback) {
+    let apiUrl = 'http://localhost:3000';
+    const qs = [];
+
+    Object.keys(data).map((key, index) => {
+        qs.push(`${key}=${data[key]}`);
+    });
+
+    if (qs.length > 0) {
+        apiUrl += `/?${qs.join('&')}`;
+    }
+
+    await fetch(apiUrl).finally(() => {
+        callback(data);
+    });
+}
 
 function addElement({ name, url }) {
     const li = document.createElement('li')
@@ -21,8 +47,10 @@ function addElement({ name, url }) {
 }
 
 function removeElement(el) {
-    if (confirm('Tem certeza que deseja deletar?'))
-        el.parentNode.remove()
+    if (confirm('Tem certeza que deseja deletar?')) {
+        /* @todo delete from api too */
+        el.parentNode.remove();
+    }
 }
 
 form.addEventListener("submit", (event) => {
@@ -41,7 +69,9 @@ form.addEventListener("submit", (event) => {
     if (!/^http/.test(url))
         return alert("Digite a url da maneira correta")
 
-    addElement({ name, url })
+    fetchApiUrl({ name, url }, (data) => {
+        addElement(data);
+    });
 
     input.value = ""
 })
